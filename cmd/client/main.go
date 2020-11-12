@@ -1,11 +1,16 @@
 package main
 
 import (
+	"bytes"
+	"crypto/rand"
 	"fmt"
+	"io"
 	"net"
 	"os"
 	"time"
 )
+
+const MSG_SIZE = 256 // should be synced with the server
 
 func panicOnErr(ctx string, err error) {
 	if err != nil {
@@ -31,10 +36,39 @@ func main() {
 	panicOnErr("Failed to connect", err)
 	fmt.Printf("Connected to %s\n", conn.RemoteAddr())
 
-	msg := []byte("hello world")
+	request := make([]byte, MSG_SIZE)
+	reply := make([]byte, MSG_SIZE)
+
 	for {
-		_, err = conn.Write(msg)
-		panicOnErr("conn.Write", err)
+		_, err := rand.Read(request)
+		panicOnErr("rand.Read", err)
+		writeDone := make(chan struct{})
+		go func() {
+			_, err = conn.Write(request)
+			panicOnErr("conn.Write", err)
+			close(writeDone)
+		}()
+		select {
+		case <-writeDone:
+		case <-time.After(1 * time.Second):
+			panic("conn.Write timed out")
+		}
+
+		readDone := make(chan struct{})
+		go func() {
+			_, err = io.ReadFull(conn, reply)
+			panicOnErr("io.ReadFull", err)
+			close(readDone)
+		}()
+		select {
+		case <-readDone:
+		case <-time.After(1 * time.Second):
+			panic("conn.Read timed out")
+		}
+		if bytes.Compare(request, reply) != 0 {
+			panic(fmt.Sprintf("Invalid reply(%v) for request(%v)", reply, request))
+		}
+
 		time.Sleep(500 * time.Millisecond)
 	}
 }

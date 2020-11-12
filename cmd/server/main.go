@@ -2,9 +2,12 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"net"
 	"os"
 )
+
+const MSG_SIZE = 256 // should be synced with the client
 
 func panicOnErr(ctx string, err error) {
 	if err != nil {
@@ -14,10 +17,12 @@ func panicOnErr(ctx string, err error) {
 
 func read(conn net.Conn) {
 	fmt.Println("New connection from", conn.RemoteAddr())
-	buf := make([]byte, 128)
+	buf := make([]byte, MSG_SIZE)
 	for {
-		_, err := conn.Read(buf)
-		panicOnErr("conn.Read", err)
+		_, err := io.ReadFull(conn, buf)
+		panicOnErr("io.ReadFull", err)
+		_, err = conn.Write(buf)
+		panicOnErr("io.Write", err)
 	}
 }
 
