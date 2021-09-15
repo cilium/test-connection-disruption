@@ -1,7 +1,8 @@
 # migrate-svc-test
 
-This repo contains a dummy echo TCP server and client which are used to test
-whether connections are not interrupted during Cilium upgrades.
+This repo contains dummy echo TCP and UDP servers and clients
+that are used to test whether connections are not interrupted 
+during cases such as Cilium upgrades and LB service endpoint updates.
 
 A container image containing both can be fetched from
 [here](https://hub.docker.com/r/cilium/migrate-svc-test).
