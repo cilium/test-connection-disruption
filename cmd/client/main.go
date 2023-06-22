@@ -35,6 +35,9 @@ func main() {
 	}
 	panicOnErr("Failed to connect", err)
 	fmt.Printf("Connected to %s\n", conn.RemoteAddr())
+	file, err := os.Create("/tmp/client-ready")
+	panicOnErr("Failed to create file", err)
+	file.Close()
 
 	request := make([]byte, MSG_SIZE)
 	reply := make([]byte, MSG_SIZE)
