@@ -34,7 +34,7 @@ func main() {
 		time.Sleep(1 * time.Second)
 	}
 	panicOnErr("Failed to connect", err)
-	fmt.Printf("Connected to %s\n", conn.RemoteAddr())
+	fmt.Printf("Connected to %s from %s\n", conn.RemoteAddr(), conn.LocalAddr())
 	file, err := os.Create("/tmp/client-ready")
 	panicOnErr("Failed to create file", err)
 	file.Close()
