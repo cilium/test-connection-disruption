@@ -31,6 +31,10 @@ func main() {
 	listen, err := net.Listen("tcp", ":"+port)
 	panicOnErr("net.Listen", err)
 
+	file, err := os.Create("/tmp/server-ready")
+	panicOnErr("Failed to create file", err)
+	file.Close()
+
 	fmt.Printf("Listening on %s...\n", port)
 
 	for {
