@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"net"
@@ -20,8 +21,16 @@ func read(conn net.Conn) {
 	buf := make([]byte, MSG_SIZE)
 	for {
 		_, err := io.ReadFull(conn, buf)
+		if errors.Is(err, io.EOF) {
+			fmt.Println("Closed connection from", conn.RemoteAddr())
+			return
+		}
 		panicOnErr("io.ReadFull", err)
 		_, err = conn.Write(buf)
+		if errors.Is(err, io.EOF) {
+			fmt.Println("Closed connection to", conn.RemoteAddr())
+			return
+		}
 		panicOnErr("io.Write", err)
 	}
 }
