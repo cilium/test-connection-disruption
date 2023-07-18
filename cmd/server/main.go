@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"io"
 	"net"
@@ -18,20 +17,19 @@ func panicOnErr(ctx string, err error) {
 
 func read(conn net.Conn) {
 	fmt.Println("New connection from", conn.RemoteAddr())
+	defer conn.Close()
 	buf := make([]byte, MSG_SIZE)
 	for {
 		_, err := io.ReadFull(conn, buf)
-		if errors.Is(err, io.EOF) {
-			fmt.Println("Closed connection from", conn.RemoteAddr())
+		if err != nil {
+			fmt.Println("Closed connection from", conn.RemoteAddr(), err)
 			return
 		}
-		panicOnErr("io.ReadFull", err)
 		_, err = conn.Write(buf)
-		if errors.Is(err, io.EOF) {
-			fmt.Println("Closed connection to", conn.RemoteAddr())
+		if err != nil {
+			fmt.Println("Closed connection to", conn.RemoteAddr(), err)
 			return
 		}
-		panicOnErr("io.Write", err)
 	}
 }
 
