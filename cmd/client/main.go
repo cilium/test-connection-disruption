@@ -8,9 +8,13 @@ import (
 	"net"
 	"os"
 	"time"
+
+	flag "github.com/spf13/pflag"
 )
 
 const MSG_SIZE = 256 // should be synced with the server
+
+var DispatchInterval uint32
 
 func panicOnErr(ctx string, err error) {
 	if err != nil {
@@ -19,11 +23,14 @@ func panicOnErr(ctx string, err error) {
 }
 
 func main() {
+	flag.Uint32Var(&DispatchInterval, "dispatch-interval", 500, "TCP packet dispatch interval in milliseconds")
+	flag.Parse()
+
 	var (
 		conn net.Conn
 		err  error
 	)
-	addr := os.Args[1]
+	addr := flag.Args()[0]
 
 	for i := 0; i < 30; i++ {
 		conn, err = net.Dial("tcp", addr)
@@ -72,6 +79,6 @@ func main() {
 			panic(fmt.Sprintf("Invalid reply(%v) for request(%v)", reply, request))
 		}
 
-		time.Sleep(500 * time.Millisecond)
+		time.Sleep(time.Duration(DispatchInterval) * time.Millisecond)
 	}
 }
