@@ -5,3 +5,7 @@ whether connections are not interrupted during Cilium upgrades.
 
 A container image containing both can be fetched from
 `quay.io/cilium/test-connection-disruption`.
+
+To publish a new multi-arch image:
+
+`TAG=v0.0.$X make publish`
