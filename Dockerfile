@@ -10,6 +10,6 @@ ADD . .
 RUN CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} make
 
 # RUNTIME
-FROM --platform=${TARGETPLATFORM:-linux/amd64} scratch
+FROM --platform=${TARGETPLATFORM:-linux/amd64} busybox
 COPY --from=builder /src/test-connection-disruption/client /usr/bin/tcd-client
 COPY --from=builder /src/test-connection-disruption/server /usr/bin/tcd-server
