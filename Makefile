@@ -1,14 +1,19 @@
 GO ?= go
 TAG ?= v0.0.10
 IMAGE ?= quay.io/cilium/test-connection-disruption
+GOOS ?= linux
+GOARCH ?= amd64
 
 all: client server
 
 client: cmd/client
-	CGO_ENABLED=0 $(GO) build -a -ldflags '-extldflags "-static"' ./cmd/client
+	CGO_ENABLED=0 GOOS=$(GOOS) GOARCH=$(GOARCH) $(GO) build -a -ldflags '-extldflags "-static"' ./cmd/client
 
 server: cmd/server
-	CGO_ENABLED=0 $(GO) build -a -ldflags '-extldflags "-static"' ./cmd/server
+	CGO_ENABLED=0 GOOS=$(GOOS) GOARCH=$(GOARCH) $(GO) build -a -ldflags '-extldflags "-static"' ./cmd/server
+
+.PHONY: clean
+	rm -f client server
 
 .PHONY: image
 

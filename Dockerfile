@@ -7,7 +7,8 @@ ARG TARGETARCH
 
 WORKDIR /src/test-connection-disruption
 ADD . .
-RUN CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} make
+RUN make clean
+RUN GOOS=${TARGETOS} GOARCH=${TARGETARCH} make
 
 # RUNTIME
 FROM --platform=${TARGETPLATFORM:-linux/amd64} busybox
