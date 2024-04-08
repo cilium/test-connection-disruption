@@ -7,6 +7,7 @@ import (
 	"io"
 	"net"
 	"os"
+	"sync/atomic"
 	"time"
 
 	flag "github.com/spf13/pflag"
@@ -49,6 +50,14 @@ func main() {
 	request := make([]byte, MSG_SIZE)
 	reply := make([]byte, MSG_SIZE)
 
+	var count atomic.Int64
+	go func() {
+		ticker := time.NewTicker(time.Second)
+		for range ticker.C {
+			fmt.Printf("Operations per second: %d\n", count.Swap(0))
+		}
+	}()
+
 	for {
 		_, err := rand.Read(request)
 		panicOnErr("rand.Read", err)
@@ -79,6 +88,7 @@ func main() {
 			panic(fmt.Sprintf("Invalid reply(%v) for request(%v)", reply, request))
 		}
 
+		count.Add(1)
 		time.Sleep(DispatchInterval)
 	}
 }
