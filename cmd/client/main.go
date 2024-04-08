@@ -61,29 +61,15 @@ func main() {
 	for {
 		_, err := rand.Read(request)
 		panicOnErr("rand.Read", err)
-		writeDone := make(chan struct{})
-		go func() {
-			_, err = conn.Write(request)
-			panicOnErr("conn.Write", err)
-			close(writeDone)
-		}()
-		select {
-		case <-writeDone:
-		case <-time.After(1 * time.Second):
-			panic("conn.Write timed out")
-		}
 
-		readDone := make(chan struct{})
-		go func() {
-			_, err = io.ReadFull(conn, reply)
-			panicOnErr("io.ReadFull", err)
-			close(readDone)
-		}()
-		select {
-		case <-readDone:
-		case <-time.After(1 * time.Second):
-			panic("conn.Read timed out")
-		}
+		panicOnErr("conn.SetWriteDeadline", conn.SetWriteDeadline(time.Now().Add(1*time.Second)))
+		_, err = conn.Write(request)
+		panicOnErr("conn.Write", err)
+
+		panicOnErr("conn.SetReadDeadline", conn.SetReadDeadline(time.Now().Add(1*time.Second)))
+		_, err = io.ReadFull(conn, reply)
+		panicOnErr("io.ReadFull", err)
+
 		if !bytes.Equal(request, reply) {
 			panic(fmt.Sprintf("Invalid reply(%v) for request(%v)", reply, request))
 		}
