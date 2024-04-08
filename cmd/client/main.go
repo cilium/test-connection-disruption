@@ -14,7 +14,7 @@ import (
 
 const MSG_SIZE = 256 // should be synced with the server
 
-var DispatchInterval uint32
+var DispatchInterval time.Duration
 
 func panicOnErr(ctx string, err error) {
 	if err != nil {
@@ -23,7 +23,7 @@ func panicOnErr(ctx string, err error) {
 }
 
 func main() {
-	flag.Uint32Var(&DispatchInterval, "dispatch-interval", 500, "TCP packet dispatch interval in milliseconds")
+	flag.DurationVar(&DispatchInterval, "dispatch-interval", 500*time.Millisecond, "TCP packet dispatch interval")
 	flag.Parse()
 
 	var (
@@ -79,6 +79,6 @@ func main() {
 			panic(fmt.Sprintf("Invalid reply(%v) for request(%v)", reply, request))
 		}
 
-		time.Sleep(time.Duration(DispatchInterval) * time.Millisecond)
+		time.Sleep(DispatchInterval)
 	}
 }
