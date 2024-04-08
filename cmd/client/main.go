@@ -75,7 +75,7 @@ func main() {
 		case <-time.After(1 * time.Second):
 			panic("conn.Read timed out")
 		}
-		if bytes.Compare(request, reply) != 0 {
+		if !bytes.Equal(request, reply) {
 			panic(fmt.Sprintf("Invalid reply(%v) for request(%v)", reply, request))
 		}
 
