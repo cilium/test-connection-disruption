@@ -1,5 +1,5 @@
 GO ?= go
-TAG ?= v0.0.15
+TAG ?= v0.0.16
 IMAGE ?= quay.io/cilium/test-connection-disruption
 GOOS ?= linux
 GOARCH ?= amd64
