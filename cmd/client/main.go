@@ -48,12 +48,12 @@ func main() {
 		os.Exit(1)
 	}
 
-	// For backwards compatibility, clamp the interval to a minimum of 1ms.
-	// Before the rewrite, 0ms meant roughly 5k pps due to latency, but now
-	// 500k pps can be achieved by disabling the interval.
+	// For backwards compatibility, clamp the interval to a minimum of 10ms to
+	// avoid overloading resource-constrained CI machines where Cilium runs with
+	// monitor aggregation disabled.
 	if args.interval == 0 {
-		args.interval = 500 * time.Microsecond
-		fmt.Println("Zero interval changed to", args.interval, "for backwards compatibility, otherwise bufferbloat will interfere.")
+		args.interval = 10 * time.Millisecond
+		fmt.Println("Zero interval changed to", args.interval, "for backwards compatibility.")
 	}
 
 	conn, err := dial()
