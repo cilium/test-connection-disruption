@@ -34,12 +34,12 @@ var stats struct {
 var args struct {
 	addr     string
 	interval time.Duration
-	latency  time.Duration
+	timeout  time.Duration
 }
 
 func main() {
 	flag.DurationVar(&args.interval, "dispatch-interval", 50*time.Millisecond, "TCP packet dispatch interval")
-	flag.DurationVar(&args.latency, "latency", 250*time.Millisecond, "Maximum expected latency for the connection, used for setting read deadlines")
+	flag.DurationVar(&args.timeout, "timeout", 5*time.Second, "Client exits when no reply is received within this duration")
 	flag.Parse()
 
 	args.addr = flag.Arg(0)
@@ -121,7 +121,7 @@ func writer(ctx context.Context, cancel context.CancelFunc, conn net.Conn, reque
 		// behaviour.
 		runtime.LockOSThread()
 
-		fmt.Println("Sending requests at a target interval of", args.interval, "with max expected latency of", args.latency)
+		fmt.Println("Sending requests at a target interval of", args.interval, "with timeout of", args.timeout)
 
 		for {
 			// Immediately stop producing packets when the client is shutting down.
@@ -174,10 +174,10 @@ func reader(ctx context.Context, cancel context.CancelFunc, conn net.Conn, reque
 		// Stop the reader when the writer is done, or the ErrGroup will wait forever.
 		defer cancel()
 
+		last := time.Now()
 		reply := make([]byte, internal.MsgSize)
 		for {
-			deadline := args.interval + args.latency
-			if err := conn.SetReadDeadline(time.Now().Add(deadline)); err != nil {
+			if err := conn.SetReadDeadline(time.Now().Add(100 * time.Millisecond)); err != nil {
 				return fmt.Errorf("set read deadline: %w", err)
 			}
 
@@ -198,7 +198,12 @@ func reader(ctx context.Context, cancel context.CancelFunc, conn net.Conn, reque
 				default:
 				}
 
-				return fmt.Errorf("no reply received within %v deadline: %w (%d tx, %d rx)", deadline, err, stats.tx.Load(), stats.rx.Load())
+				// Retry while the last reply was received within the timeout.
+				if time.Since(last) <= args.timeout {
+					continue
+				}
+
+				return fmt.Errorf("no reply received within %v timeout: %w", args.timeout, err)
 			}
 			if errors.Is(err, io.EOF) {
 				fmt.Println("Server closed the connection")
@@ -212,6 +217,7 @@ func reader(ctx context.Context, cancel context.CancelFunc, conn net.Conn, reque
 				return fmt.Errorf("invalid reply(%v) to request(%v)", reply, request)
 			}
 
+			last = time.Now()
 			stats.rx.Add(1)
 			stats.bytes.Add(internal.MsgSize)
 
