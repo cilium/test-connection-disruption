@@ -13,15 +13,14 @@ server: cmd/server
 	CGO_ENABLED=0 GOOS=$(GOOS) GOARCH=$(GOARCH) $(GO) build -a -ldflags '-extldflags "-static"' ./cmd/server
 
 .PHONY: clean
+clean:
 	rm -f client server
 
 .PHONY: image
-
 image: client server
 	docker build --tag $(IMAGE):$(TAG) .
 
 .PHONY: publish
-
 publish:
 	@docker buildx create --use --name=crossplatform --node=crossplatform && \
 	docker buildx build \
