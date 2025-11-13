@@ -47,6 +47,26 @@ func Sleep(d time.Duration) {
 	}
 }
 
+func Pause(interval time.Duration, pauseDuration time.Duration, startTime time.Time) (nextPauseDuration time.Duration) {
+	// Sleep for the duration determined during the previous round. Use a
+	// direct call to nanosleep(2) since the regular [time.Sleep] is
+	// implemented by the Go runtime and gets coalesced to reduce syscall
+	// overhead. This leads to wildly unexpected sleep durations.
+	Sleep(pauseDuration)
+
+	// Adjust the sleep interval for the next cycle based on the time it took
+	// to write to the socket and when the OS scheduler woke us up.
+	delta := interval - time.Since(startTime)
+
+	// Smoothen the approach to the target interval by adjusting the pause
+	// interval by half the delta.
+	pauseDuration += (delta / 2)
+
+	// Ensure pause stays within bounds. On a permanent deficit, it would
+	// run negative and overflow at some point.
+	return min(max(pauseDuration, -interval), interval)
+}
+
 // ByteString returns a human-readable string representation of the given byte
 // count. Taken from https://stackoverflow.com/a/1094933/1333724.
 func ByteString[T constraints.Integer](b T) string {

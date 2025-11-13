@@ -136,24 +136,7 @@ func (c *TcpClient) writer(ctx context.Context, cancel context.CancelFunc, conn 
 			}
 
 			c.stats.tx.Add(1)
-
-			// Sleep for the duration determined during the previous round. Use a
-			// direct call to nanosleep(2) since the regular [time.Sleep] is
-			// implemented by the Go runtime and gets coalesced to reduce syscall
-			// overhead. This leads to wildly unexpected sleep durations.
-			internal.Sleep(pause)
-
-			// Adjust the sleep interval for the next cycle based on the time it took
-			// to write to the socket and when the OS scheduler woke us up.
-			delta := c.config.Interval - time.Since(start)
-
-			// Smoothen the approach to the target interval by adjusting the pause
-			// interval by half the delta.
-			pause += (delta / 2)
-
-			// Ensure pause stays within bounds. On a permanent deficit, it would
-			// run negative and overflow at some point.
-			pause = min(max(pause, -c.config.Interval), c.config.Interval)
+			pause = internal.Pause(c.config.Interval, pause, start)
 		}
 	}
 }
