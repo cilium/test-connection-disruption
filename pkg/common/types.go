@@ -10,7 +10,8 @@ import (
 type Protocol string
 
 const (
-	ProtocolTCP Protocol = "tcp"
+	ProtocolTCP  Protocol = "tcp"
+	ProtocolHTTP Protocol = "http"
 )
 
 type ProtocolConfig struct {

@@ -11,6 +11,7 @@ import (
 
 	"github.com/cilium/test-connection-disruption/internal"
 	"github.com/cilium/test-connection-disruption/pkg/common"
+	"github.com/cilium/test-connection-disruption/pkg/http"
 	"github.com/cilium/test-connection-disruption/pkg/tcp"
 )
 
@@ -43,6 +44,8 @@ func main() {
 	switch common.Protocol(cc.Protocol) {
 	case common.ProtocolTCP:
 		handler = tcp.NewTcpClient(cc)
+	case common.ProtocolHTTP:
+		handler = http.NewHttpClient(cc)
 	default:
 		fmt.Printf("Invalid Protocol: %s\n", cc.Protocol)
 		os.Exit(1)
