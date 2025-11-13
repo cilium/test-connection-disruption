@@ -39,7 +39,7 @@ func NewTcpClient(config common.ClientConfig) *TcpClient {
 }
 
 func (c *TcpClient) Run(ctx context.Context, cancel context.CancelFunc) {
-	fmt.Printf("Starting TCP Client with config: %#v\n", c.config)
+	fmt.Printf("Starting TCP Client with config: %v\n", c.config)
 
 	conn, err := c.dial()
 	internal.ErrExit("dial remote", err)
