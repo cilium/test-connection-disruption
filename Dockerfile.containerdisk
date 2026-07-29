@@ -1,0 +1,31 @@
+ARG BASEIMAGE=invalid_base_image
+ARG TARGETPLATFORM
+ARG BUILDPLATFORM
+
+# BASEIMAGE
+FROM ${BASEIMAGE} AS baseimage
+
+# BUILDER
+# Note: This stage runs on the build (and not the target) platform,
+# because libguestfs spawns a mini-VM to be able to create and write ext4 images and
+# that requires a native builder.
+FROM --platform=${BUILDPLATFORM:-linux/amd64} quay.io/kubevirt/libguestfs-tools:v1.8.4 AS guestfs
+
+ENV LIBGUESTFS_BACKEND=direct
+ENV LIBGUESTFS_PATH=/usr/local/lib/guestfs/appliance
+ENV LIBGUESTFS_TMPDIR=/tmp/guestfs
+ENV HOME=/home/guestfs
+
+# Extract conndisrupt binaries from baseimage into the /conndisrupt folder
+COPY --from=baseimage /usr/bin/tcd-client /conndisrupt/
+COPY --from=baseimage /usr/bin/tcd-server /conndisrupt/
+
+# Create an ext4 disk image from the /conndisrupt folder
+RUN --mount=type=cache,mode=0755,uid=1001,gid=0,target=/home/guestfs \
+    --mount=type=cache,mode=0755,uid=1001,gid=0,target=/tmp/guestfs \
+    virt-make-fs /conndisrupt --type=ext4 --format=qcow2 --label=conndisrupt /tmp/conndisrupt.img
+
+# CONTAINERDISK
+# Provide the disk image in the format expected by KubeVirt
+FROM scratch
+COPY --from=guestfs /tmp/conndisrupt.img /disk/conndisrupt.img

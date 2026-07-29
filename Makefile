@@ -29,3 +29,11 @@ publish:
 		--platform linux/amd64,linux/arm64 \
 		--output "type=image,push=true" \
 		--tag $(IMAGE):$(TAG) .
+
+	@docker buildx create --use --name=crossplatform --node=crossplatform && \
+	docker buildx build \
+		--file Dockerfile.containerdisk \
+		--build-arg BASEIMAGE=$(IMAGE):$(TAG) \
+		--platform linux/amd64,linux/arm64 \
+		--output "type=image,push=true" \
+		--tag $(IMAGE):$(TAG)-containerdisk .
