@@ -19,7 +19,7 @@ clean:
 	rm -f client server
 
 .PHONY: image
-image: client server
+image:
 	docker build --tag $(IMAGE):$(TAG) .
 
 .PHONY: publish
