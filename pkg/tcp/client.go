@@ -123,7 +123,14 @@ func (c *TcpClient) writer(ctx context.Context, cancel context.CancelFunc, conn 
 
 			start := time.Now()
 
-			if err := conn.SetWriteDeadline(start.Add(time.Second)); err != nil {
+			// Use the configured timeout rather than a fixed one second. This
+			// client runs a writer and a reader goroutine over the same conn,
+			// and the reader retries while the last reply arrived within
+			// c.config.Timeout. A hardcoded write deadline therefore made the
+			// writer the strictest part of the client: a transient stall of
+			// just over a second terminated it, while the same stall on the
+			// read side was retried.
+			if err := conn.SetWriteDeadline(start.Add(c.config.Timeout)); err != nil {
 				return fmt.Errorf("set write deadline: %w", err)
 			}
 
